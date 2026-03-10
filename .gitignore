@@ -13,7 +13,7 @@ __pycache__/
 .env
 venv/
 .venv/
-git
+# git
 # Jupyter
 .ipynb_checkpoints/
 
