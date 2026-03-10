@@ -1,0 +1,30 @@
+# Data — never commit raw datasets to git
+data/
+
+# Model weights — too large for git
+models/*.pth
+models/*.pt
+models/*.z
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+venv/
+.venv/
+git
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Outputs (optional — you may want to commit some plots)
+outputs/
