@@ -21,6 +21,7 @@ venv/
 .idea/
 .vscode/
 *.swp
+.run/
 
 # OS
 .DS_Store
