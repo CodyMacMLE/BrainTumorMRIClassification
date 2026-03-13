@@ -1,4 +1,4 @@
-# ./typedef/Patients.py
+# ./Typedef/Patients.py
 import numpy as np
 from typing import TypeAlias
 
