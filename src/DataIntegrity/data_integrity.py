@@ -3,6 +3,7 @@
 # External Imports
 import pandas as pd
 import numpy as np
+from pathlib import Path
 import glob
 from tqdm import tqdm
 import cv2 as cv
@@ -102,8 +103,10 @@ def data_integrity_check(data_path: os.PathLike, rejected_path: os.PathLike | No
                     continue
 
                 # All checks pass append to patients
+                mri_path = Path(f"{patient_addr}/{segment_name}.tif")
+                mask_path = Path(img_addr)
                 patient_accepted_segments = patients.setdefault(patient_id, [])
-                patient_accepted_segments.append((mri_img, mask_img))
+                patient_accepted_segments.append((mri_path, mask_path))
 
     # if rejected path write to csv
     if rejected_path:
