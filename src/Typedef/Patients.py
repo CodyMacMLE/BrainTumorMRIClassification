@@ -1,10 +1,10 @@
 # ./Typedef/Patients.py
-import numpy as np
+import os
 from typing import TypeAlias
 
 PatientId: TypeAlias = str
-MriImage: TypeAlias = np.ndarray
-MaskImage: TypeAlias = np.ndarray
+MriImage: TypeAlias = os.PathLike
+MaskImage: TypeAlias = os.PathLike
 
 MriSegment: TypeAlias = tuple[MriImage, MaskImage]
 Patients: TypeAlias = dict[PatientId, list[MriSegment]]

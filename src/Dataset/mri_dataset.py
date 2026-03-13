@@ -1,6 +1,5 @@
 # External Imports
 import torch
-import numpy as np
 import cv2 as cv
 from PIL import Image
 
@@ -12,33 +11,35 @@ class MriDataset(torch.utils.data.Dataset):
         """
         Initializes the MRI Dataset to use in training, testing, and validation
         :param data: The data of patients that have passed data integrity. The data needs to have been split
-        prior to this step and given as the Patients datatype which stores the data as a cv2 image within a ndarray type (numpy).
-        :param transform: I am unsure what this is
+        prior to this step and given as the Patients datatype.
+        :param transform:
         """
 
-        self.mri_images = []
+        self.mri_dataset = []
         self.transform = transform
 
         # Iterate through patients dict
         for _ , mri_segments in data.items():
             # Iterate through the segments list
             for mri_segment in mri_segments:
-                mri_image, mri_mask = mri_segment
+                mri_image_path, mri_mask_path = mri_segment
                 # create label
-                if mri_mask.max() > 0:
+                mri_mask_img = cv.imread(str(mri_mask_path))
+                if mri_mask_img.max() > 0:
                     label = 1
                 else:
                     label = 0
 
-                self.mri_images.append((mri_image, label))
+                self.mri_dataset.append((mri_image_path, label))
 
     def __len__(self):
-        return len(self.mri_images)
+        return len(self.mri_dataset)
 
     def __getitem__(self, index):
-        image, label = self.mri_images[index]
+        img_path, label = self.mri_dataset[index]
 
-        # convert cv2 bgr to rgb
+        # read and convert to RGB
+        image = cv.imread(str(img_path))
         image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
 
         # convert mri to PIL format
