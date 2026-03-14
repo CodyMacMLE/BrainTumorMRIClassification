@@ -10,7 +10,7 @@ from PIL import Image
 import os
 
 # Internal Imports
-from Typedef.Patients import Patients, MaskImage, MriImage, PatientId
+from Typedef.Patients import Patients, RejectedSegments, MaskImage, MriImage, PatientId
 
 # HELPERS
 def primarily_white_in_mask(mask: np.ndarray, threshold: float = 0.75) -> bool:
@@ -38,7 +38,7 @@ def is_valid_mri(image: np.ndarray) -> bool:
     return not (np.all((image == 0) | (image == 255)))
 
 # Main Function
-def data_integrity_check(data_path: os.PathLike, threshold: float = 0.75) -> tuple[Patients, dict[PatientId, list[tuple[int, str]]]]:
+def data_integrity_check(data_path: os.PathLike, threshold: float = 0.75) -> tuple[Patients, RejectedSegments]:
     """
     Checks the integrity of the data. Checks if images are read properly, the mri segment has a paired mask image;
     the images have the proper shape and channels, checks if the mri image is a valid colored image, and checks if the
@@ -49,7 +49,7 @@ def data_integrity_check(data_path: os.PathLike, threshold: float = 0.75) -> tup
     :return: a tuple of dictionaries; Index [0] being the data that passed the test, Index [1] being the data that failed
     """
     patients: Patients = {}
-    rejected_segments: dict[PatientId, list[tuple[os.PathLike, str]]] = {}
+    rejected_segments: RejectedSegments = {}
 
     # Loop through all patients
     for idx, patient_addr in enumerate(tqdm((glob.glob(f"{str(data_path)}/*")), desc = "[INFO] Data Integrity Checks", position = 0, dynamic_ncols = True)):

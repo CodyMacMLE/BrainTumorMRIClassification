@@ -4,7 +4,7 @@ import json
 from typing import Literal
 
 # Internal Imports
-from Typedef.Patients import Patients
+from Typedef.Patients import Patients, RejectedSegments
 
 
 def save_cache(data: Patients, path: os.PathLike, data_type: Literal["accepted", "rejected"] = "accepted" ):
@@ -37,5 +37,16 @@ def save_cache(data: Patients, path: os.PathLike, data_type: Literal["accepted",
     print(f"[INFO] Cache saved to {path}")
 
 
-def load_cache(path: os.PathLike) -> Patients:
-    pass
+def load_cache(path: os.PathLike) -> Patients | RejectedSegments:
+    try:
+        # Open the file in read mode ('r') with the 'with' statement
+        with open(path, 'r') as f:
+            # Use json.load() to parse the file data into a Python object
+            data: Patients | RejectedSegments = json.load(f)
+
+    except FileNotFoundError:
+        print("Error: The file 'data.json' was not found.")
+    except json.JSONDecodeError:
+        print("Error: Failed to decode JSON from the file. Check for invalid JSON content.")
+    print(f"[INFO] Cache loaded from {path}")
+    return data
