@@ -2,6 +2,7 @@
 import os
 import sys
 from pathlib import Path
+import shutil
 import kagglehub
 
 # Internal
@@ -15,12 +16,13 @@ SPLIT_SEED = 43
 
 # HELPERS
 def download_dataset(download_path: os.PathLike) -> os.PathLike:
-    if not download_path.exists():
-        download_path.mkdir(parents=True, exist_ok=True)
-        data_path = kagglehub.dataset_download("mateuszbuda/lgg-mri-segmentation", str(download_path))
-        data_path = Path(data_path, "kaggle_3m")
-    else:
-        data_path = Path(download_path, "kaggle_3m")
+    if Path(download_path).exists():
+        print(f"[INFO] Dataset already exists at {download_path}. Skipping download.")
+        return Path(download_path, "kaggle_3m")
+
+    data_path = kagglehub.dataset_download("mateuszbuda/lgg-mri-segmentation")
+    shutil.copytree(data_path, download_path, dirs_exist_ok=True)
+    data_path = Path(download_path, "kaggle_3m")
 
     print("Path to dataset files:", data_path)
     return data_path
