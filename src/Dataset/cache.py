@@ -45,7 +45,7 @@ def load_cache(path: os.PathLike) -> Patients | RejectedSegments:
             # Use json.load() to parse the file data into a Python object
             data = json.load(f)
 
-        print(f"[INFO] Cache loaded from {path}")
+        print(f"[INFO]  Cache loaded from {path}")
         return data
 
     except FileNotFoundError as e:

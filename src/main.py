@@ -12,7 +12,7 @@ from Dataset.cache import save_cache, load_cache
 from Typedef.Patients import Patients, RejectedSegments
 from Dataset import split_patients
 
-SPLIT_SEED = 43
+SPLIT_SEED = 42
 
 # HELPERS
 def download_dataset(download_path: os.PathLike) -> os.PathLike:
@@ -61,8 +61,6 @@ def main():
         accepted_data, rejected_data = build_cache(download_path, accepted_path, rejected_path)
 
     train, valid, test = split_patients(accepted_data, SPLIT_SEED)
-
-    debugger = 0
 
 if __name__ == "__main__":
     main()
