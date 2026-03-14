@@ -6,8 +6,9 @@ import numpy as np
 from pathlib import Path
 import glob
 from tqdm import tqdm
-import cv2 as cv
+from PIL import Image
 import os
+import time
 
 # Internal Imports
 from Typedef.Patients import Patients, MaskImage, MriImage, PatientId
@@ -23,7 +24,7 @@ def primarily_white_in_mask(mask: np.ndarray, threshold: float = 0.75) -> bool:
     if not (0 < threshold <= 1):
         raise ValueError("Threshold value must be lower than or equal to 1.0")
     if mask.ndim != 2:
-        raise ValueError("Mask must be a 2D grayscale array. Convert to grayscale before passing in (e.g. cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY))")
+        raise ValueError("Mask must be a 2D grayscale array. Convert to grayscale before passing in")
 
     white_pixels = np.sum(mask == 255)
     total_pixels = mask.size
@@ -38,7 +39,10 @@ def is_valid_mri(image: np.ndarray) -> bool:
     return not (np.all((image == 0) | (image == 255)))
 
 # Main Function
-def data_integrity_check(data_path: os.PathLike, rejected_path: os.PathLike | None = None, threshold: float = 0.75) -> tuple[Patients, dict[PatientId, list[tuple[int, str]]]]:
+def data_integrity_check(
+        data_path: os.PathLike,
+        rejected_path: os.PathLike | None = None,
+        threshold: float = 0.75) -> tuple[Patients, dict[PatientId, list[tuple[int, str]]]]:
     """
     Checks the integrity of the data. Checks if images are read properly, the mri segment has a paired mask image;
     the images have the proper shape and channels, checks if the mri image is a valid colored image, and checks if the
@@ -63,40 +67,45 @@ def data_integrity_check(data_path: os.PathLike, rejected_path: os.PathLike | No
             if img_addr.endswith('_mask.tif'):
                 segment_name = img_addr.split('/')[-1].replace("_mask.tif", "")
                 segment_id = int(segment_name.split('_')[-1])
-                # Store the mask as a ndarray
-                mask_img: MaskImage = cv.imread(img_addr, cv.IMREAD_GRAYSCALE)
-
-                # First Integrity Check: Bad image read (MASK)
-                if mask_img is None:
+                # Store the mask as a PIL image
+                try:
+                    start = time.time()
+                    mask_img = Image.open(img_addr).convert('L')
+                    mask_np_array = np.array(mask_img)
+                    tqdm.write(f"TIME: {time.time() - start:.3f}s | INFO: {mask_img.size}, {mask_img.mode}, {mask_img.format} | PATH: {img_addr}")
+                except Exception:
+                    # First Integrity Check: Bad image read (MASK)
                     patient_rejected_segments = rejected_segments.setdefault(patient_id, [])
                     patient_rejected_segments.append((segment_id, "[Error] Mask read was none type"))
                     # Break loop for this mask
                     continue
 
                 # Second Integrity Check: An MRI Image pair does not exist
-                mri_img: MriImage = cv.imread(f"{patient_addr}/{segment_name}.tif")
-                if mri_img is None:
+                try:
+                    mri_img = Image.open(f"{patient_addr}/{segment_name}.tif")
+                    mri_np_array = np.array(mri_img)
+                except Exception:
                     patient_rejected_segments = rejected_segments.setdefault(patient_id, [])
                     patient_rejected_segments.append((segment_id, "[Error] Mask image has no matcher MRI image pair"))
                     # Break loop for this mask
                     continue
 
                 # Third Integrity Check: Images are the proper shape
-                if not (mask_img.shape == (256,256) and mri_img.shape == (256,256,3)):
+                if not (mask_np_array.shape == (256,256) and mri_np_array.shape == (256,256,3)):
                     patient_rejected_segments = rejected_segments.setdefault(patient_id, [])
                     patient_rejected_segments.append((segment_id, "[Error] Mask and MRI image are not the right shape"))
                     # Break loop for this mask
                     continue
 
                 # Fourth Integrity Check: Check if the MRI image is a valid image
-                if not is_valid_mri(mri_img):
+                if not is_valid_mri(mri_np_array):
                     patient_rejected_segments = rejected_segments.setdefault(patient_id, [])
                     patient_rejected_segments.append((segment_id, "[Error] MRI image is not a valid image"))
                     # Break loop for this mask
                     continue
 
                 # Fifth Integrity Check: Check if the mask is over 75% a mask (This means the tumor is not accurately zoned)
-                if primarily_white_in_mask(mask_img, threshold): # the default threshold is 0.75
+                if primarily_white_in_mask(mask_np_array, threshold): # the default threshold is 0.75
                     patient_rejected_segments = rejected_segments.setdefault(patient_id, [])
                     patient_rejected_segments.append((segment_id, "[Error] Mask image does not accurately zone tumor"))
                     # Break loop for this mask

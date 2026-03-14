@@ -1,10 +1,13 @@
 # External
 import os
+import sys
 from pathlib import Path
 
 # Internal
 from DataIntegrity import data_integrity_check
 from Dataset import split_patients
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 SPLIT_SEED = 42
 
