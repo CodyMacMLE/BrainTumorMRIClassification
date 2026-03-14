@@ -38,10 +38,7 @@ def is_valid_mri(image: np.ndarray) -> bool:
     return not (np.all((image == 0) | (image == 255)))
 
 # Main Function
-def data_integrity_check(
-        data_path: os.PathLike,
-        rejected_path: os.PathLike | None = None,
-        threshold: float = 0.75) -> tuple[Patients, dict[PatientId, list[tuple[int, str]]]]:
+def data_integrity_check(data_path: os.PathLike, threshold: float = 0.75) -> tuple[Patients, dict[PatientId, list[tuple[int, str]]]]:
     """
     Checks the integrity of the data. Checks if images are read properly, the mri segment has a paired mask image;
     the images have the proper shape and channels, checks if the mri image is a valid colored image, and checks if the
@@ -52,7 +49,7 @@ def data_integrity_check(
     :return: a tuple of dictionaries; Index [0] being the data that passed the test, Index [1] being the data that failed
     """
     patients: Patients = {}
-    rejected_segments: dict[PatientId, list[tuple[int, str]]] = {}
+    rejected_segments: dict[PatientId, list[tuple[os.PathLike, str]]] = {}
 
     # Loop through all patients
     for idx, patient_addr in enumerate(tqdm((glob.glob(f"{str(data_path)}/*")), desc = "[INFO] Data Integrity Checks", position = 0, dynamic_ncols = True)):
@@ -65,7 +62,7 @@ def data_integrity_check(
             # Logic runs if the image is a mask
             if img_addr.endswith('_mask.tif'):
                 segment_name = os.path.basename(img_addr).replace("_mask.tif", "")
-                segment_id = int(segment_name.split('_')[-1])
+                mri_path = Path(patient_addr, f"{segment_name}.tif")
                 # Store the mask as a PIL image
                 try:
                     mask_img = Image.open(img_addr).convert('L')
@@ -73,38 +70,43 @@ def data_integrity_check(
                 except Exception:
                     # First Integrity Check: Bad image read (MASK)
                     patient_rejected_segments = rejected_segments.setdefault(patient_id, [])
-                    patient_rejected_segments.append((segment_id, "[Error] Mask read was none type"))
+                    patient_rejected_segments.append((Path(img_addr), "[Error] Mask read was none type"))
                     # Break loop for this mask
                     continue
 
                 # Second Integrity Check: An MRI Image pair does not exist
                 try:
-                    mri_img = Image.open(os.path.join(patient_addr, f"{segment_name}.tif"))
+                    mri_img = Image.open(mri_path)
                     mri_np_array = np.array(mri_img)
                 except Exception:
                     patient_rejected_segments = rejected_segments.setdefault(patient_id, [])
-                    patient_rejected_segments.append((segment_id, "[Error] Mask image has no matcher MRI image pair"))
+                    patient_rejected_segments.append((mri_path, "[Error] Mask image has no matcher MRI image pair"))
                     # Break loop for this mask
                     continue
 
                 # Third Integrity Check: Images are the proper shape
-                if not (mask_np_array.shape == (256,256) and mri_np_array.shape == (256,256,3)):
+                if not (mask_np_array.shape == (256,256)):
                     patient_rejected_segments = rejected_segments.setdefault(patient_id, [])
-                    patient_rejected_segments.append((segment_id, "[Error] Mask and MRI image are not the right shape"))
+                    patient_rejected_segments.append((Path(img_addr), "[Error] Mask and MRI image are not the right shape"))
+                    # Break loop for this mask
+                    continue
+                if not (mri_np_array.shape == (256,256,3)):
+                    patient_rejected_segments = rejected_segments.setdefault(patient_id, [])
+                    patient_rejected_segments.append((mri_path, "[Error] Mask and MRI image are not the right shape"))
                     # Break loop for this mask
                     continue
 
                 # Fourth Integrity Check: Check if the MRI image is a valid image
                 if not is_valid_mri(mri_np_array):
                     patient_rejected_segments = rejected_segments.setdefault(patient_id, [])
-                    patient_rejected_segments.append((segment_id, "[Error] MRI image is not a valid image"))
+                    patient_rejected_segments.append((mri_path, "[Error] MRI image is not a valid image"))
                     # Break loop for this mask
                     continue
 
                 # Fifth Integrity Check: Check if the mask is over 75% a mask (This means the tumor is not accurately zoned)
                 if primarily_white_in_mask(mask_np_array, threshold): # the default threshold is 0.75
                     patient_rejected_segments = rejected_segments.setdefault(patient_id, [])
-                    patient_rejected_segments.append((segment_id, "[Error] Mask image does not accurately zone tumor"))
+                    patient_rejected_segments.append((Path(img_addr), "[Error] Mask image does not accurately zone tumor"))
                     # Break loop for this mask
                     continue
 
@@ -113,26 +115,6 @@ def data_integrity_check(
                 mask_path = Path(img_addr)
                 patient_accepted_segments = patients.setdefault(patient_id, [])
                 patient_accepted_segments.append((mri_path, mask_path))
-
-    # if rejected path write to csv
-    if rejected_path:
-        print(f"[Info] Saving rejected segments to csv")
-        data = { 'patient_id': [], 'segment_id': [], 'reject_msg': [] }
-
-        # flatten the rejected segment dict to readable rows for pandas
-        for patient, segments in rejected_segments.items():
-            for segment in segments:
-                data['patient_id'].append(patient)
-                data['segment_id'].append(segment[0])
-                data['reject_msg'].append(segment[1])
-
-        # create dataframe and order by patient then segment
-        df = pd.DataFrame(data)
-        df = df.sort_values(by=['patient_id', 'segment_id'])
-
-        # make directory if path does not exist and write to csv
-        rejected_path.mkdir(parents=True, exist_ok=True)
-        df.to_csv(f"{str(rejected_path)}/rejected_data.csv")
 
     # Print info to terminal
     accepted_len = 0
