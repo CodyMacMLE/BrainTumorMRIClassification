@@ -31,6 +31,7 @@ def within_allowance(tested_ratio: float, total_ratio: float, allowance: float) 
 
 def split_patients(data: Patients, seed: int = 42) -> tuple[Patients, Patients, Patients]:
     try:
+        print(f"[INFO]  Splitting dataset with seed {seed}...")
         # Split at the patient level
         # Grab keys to split
         data_keys = list(data.keys())

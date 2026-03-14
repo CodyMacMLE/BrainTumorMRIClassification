@@ -40,13 +40,15 @@ def save_cache(data: Patients, path: os.PathLike, data_type: Literal["accepted",
 def load_cache(path: os.PathLike) -> Patients | RejectedSegments:
     try:
         # Open the file in read mode ('r') with the 'with' statement
+        data: Patients | RejectedSegments
         with open(path, 'r') as f:
             # Use json.load() to parse the file data into a Python object
-            data: Patients | RejectedSegments = json.load(f)
+            data = json.load(f)
 
-    except FileNotFoundError:
-        print("Error: The file 'data.json' was not found.")
-    except json.JSONDecodeError:
-        print("Error: Failed to decode JSON from the file. Check for invalid JSON content.")
-    print(f"[INFO] Cache loaded from {path}")
-    return data
+        print(f"[INFO] Cache loaded from {path}")
+        return data
+
+    except FileNotFoundError as e:
+        raise FileNotFoundError(f"Cache miss: {path}") from e
+    except json.JSONDecodeError as e:
+        raise Exception("Error: Failed to decode JSON from the file. Check for invalid JSON content.") from e
