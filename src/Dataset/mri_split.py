@@ -49,6 +49,12 @@ def within_allowance(tested_ratio: float, total_ratio: float, allowance: float) 
     return (total_ratio - allowance) < tested_ratio < (total_ratio + allowance)
 
 def split_patients(data: Patients, seed: int = 42) -> tuple[Patients, Patients, Patients]:
+    """
+    Split patients into train, valid, test
+    :param data: the patients data
+    :param seed: random seed for reproducibility
+    :return: train, valid, test as a Patients Typee
+    """
     print(f"[INFO]  Splitting dataset with seed {seed}...")
     # Split at the patient level
 
