@@ -1,7 +1,7 @@
 # External Imports
 import torch
-import cv2 as cv
 from PIL import Image
+import numpy as np
 
 # Internal Imports
 from Typedef.Patients import Patients
@@ -24,8 +24,8 @@ class MriDataset(torch.utils.data.Dataset):
             for mri_segment in mri_segments:
                 mri_image_path, mri_mask_path = mri_segment
                 # create label
-                mri_mask_img = cv.imread(str(mri_mask_path))
-                if mri_mask_img.max() > 0:
+                mri_mask_img = Image.open(mri_mask_path).convert('L')
+                if np.array(mri_mask_img).max() > 0:
                     label = 1
                 else:
                     label = 0
@@ -38,12 +38,8 @@ class MriDataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
         img_path, label = self.mri_dataset[index]
 
-        # read and convert to RGB
-        image = cv.imread(str(img_path))
-        image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
-
-        # convert mri to PIL format
-        image = Image.fromarray(image, 'RGB')
+        # read image
+        image = Image.open(img_path)
 
         if self.transform:
             image = self.transform(image)

@@ -8,7 +8,6 @@ import glob
 from tqdm import tqdm
 from PIL import Image
 import os
-import time
 
 # Internal Imports
 from Typedef.Patients import Patients, MaskImage, MriImage, PatientId
@@ -58,21 +57,19 @@ def data_integrity_check(
     # Loop through all patients
     for idx, patient_addr in enumerate(tqdm((glob.glob(f"{str(data_path)}/*")), desc = "[INFO] Data Integrity Checks", position = 0, dynamic_ncols = True)):
         # Store the patient id for use later
-        patient_id: PatientId = patient_addr.split('/')[-1]
+        patient_id: PatientId = os.path.basename(patient_addr)
 
         # Loop through all the images for the patient
         for img_addr in glob.glob(f"{patient_addr}/*"):
 
             # Logic runs if the image is a mask
             if img_addr.endswith('_mask.tif'):
-                segment_name = img_addr.split('/')[-1].replace("_mask.tif", "")
+                segment_name = os.path.basename(img_addr).replace("_mask.tif", "")
                 segment_id = int(segment_name.split('_')[-1])
                 # Store the mask as a PIL image
                 try:
-                    start = time.time()
                     mask_img = Image.open(img_addr).convert('L')
                     mask_np_array = np.array(mask_img)
-                    tqdm.write(f"TIME: {time.time() - start:.3f}s | INFO: {mask_img.size}, {mask_img.mode}, {mask_img.format} | PATH: {img_addr}")
                 except Exception:
                     # First Integrity Check: Bad image read (MASK)
                     patient_rejected_segments = rejected_segments.setdefault(patient_id, [])
@@ -82,7 +79,7 @@ def data_integrity_check(
 
                 # Second Integrity Check: An MRI Image pair does not exist
                 try:
-                    mri_img = Image.open(f"{patient_addr}/{segment_name}.tif")
+                    mri_img = Image.open(os.path.join(patient_addr, f"{segment_name}.tif"))
                     mri_np_array = np.array(mri_img)
                 except Exception:
                     patient_rejected_segments = rejected_segments.setdefault(patient_id, [])
@@ -135,7 +132,7 @@ def data_integrity_check(
 
         # make directory if path does not exist and write to csv
         rejected_path.mkdir(parents=True, exist_ok=True)
-        df.to_csv(f"{str(rejected_path)}/output.csv")
+        df.to_csv(f"{str(rejected_path)}/rejected_data.csv")
 
     # Print info to terminal
     accepted_len = 0
