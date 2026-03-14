@@ -4,8 +4,8 @@ from torch.utils.data import DataLoader
 
 # Internal Imports
 from Typedef.Patients import Patients
-from mri_dataset import MriDataset
-from transforms import get_train_transforms, get_val_transforms
+from .mri_dataset import MriDataset
+from .transforms import get_train_transforms, get_val_transforms
 
 def get_dataloaders(
       train_data: Patients,
