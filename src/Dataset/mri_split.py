@@ -1,6 +1,7 @@
 # External Imports
 from sklearn.model_selection import train_test_split
-import cv2 as cv
+from PIL import Image
+import numpy as np
 
 # Internal Imports
 from Typedef.Patients import Patients
@@ -19,8 +20,8 @@ def tumor_ratio(data: Patients) -> float:
         for segment in mri_segments:
             total_segments += 1
             _, mask_path = segment
-            mask_img = cv.imread(str(mask_path))
-            if mask_img.max() > 0:
+            mask_img = Image.open(mask_path).convert('L')
+            if np.array(mask_img).max() > 0:
                 tumor_segments += 1
 
     return tumor_segments / total_segments
