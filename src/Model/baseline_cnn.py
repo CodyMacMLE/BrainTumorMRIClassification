@@ -19,7 +19,7 @@ class BaselineModel(nn.Module):
             # 110 / 2 = 55
         )
         self.layer3 = nn.Flatten()
-        # 32 feature maps (channels) * 55 (height) * 55 (width) = 96,000
+        # 32 feature maps (channels) * 55 (height) * 55 (width) = 96,800
         self.layer4 = nn.Sequential(
             nn.Linear(in_features = 96800, out_features = 256),
             nn.ReLU()
