@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-class BaseLineModel(nn.Module):
+class BaselineModel(nn.Module):
     def __init__(self) -> None:
         super().__init__()
         # Input = 224
