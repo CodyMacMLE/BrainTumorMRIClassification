@@ -11,12 +11,13 @@ from Typedef.Patients import Patients, RejectedSegments
 def save_cache(data: Patients, save_path: os.PathLike, root_path: os.PathLike, data_type: Literal["accepted", "rejected"] = "accepted" ):
     JSON_DATA = {}
     if data_type == "accepted":
+        root_path = Path(root_path).resolve()
         for patient_id, mri_segments in data.items():
             for mri_segment in mri_segments:
                 mri_image_path, mri_mask_path = mri_segment
                 if patient_id not in JSON_DATA:
                     JSON_DATA[patient_id] = []
-                JSON_DATA[patient_id].append([mri_image_path.relative_to(root_path), mri_mask_path.relative_to(root_path)])
+                JSON_DATA[patient_id].append([mri_image_path.resolve().relative_to(root_path).as_posix(), mri_mask_path.resolve().relative_to(root_path).as_posix()])
 
     if data_type == "rejected":
         data = {'patient_id': [], 'segment_id': [], 'reject_msg': []}
