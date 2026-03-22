@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(python -c \":*)",
+      "Bash(where python3:*)",
+      "Bash(where python:*)",
+      "Bash(where conda:*)",
+      "Read(//c/Users/pc/anaconda3/**)",
+      "Read(//c/Users/pc/miniconda3/**)",
+      "Bash(/c/Users/pc/miniconda3/python.exe -c \"\nimport time\n\nstart = time.time\\(\\)\nimport torch\nprint\\(f'torch: {time.time\\(\\) - start:.2f}s'\\)\n\nstart = time.time\\(\\)\nfrom torchvision import models\nprint\\(f'torchvision.models: {time.time\\(\\) - start:.2f}s'\\)\n\nstart = time.time\\(\\)\nimport matplotlib.pyplot as plt\nprint\\(f'matplotlib: {time.time\\(\\) - start:.2f}s'\\)\n\nstart = time.time\\(\\)\nfrom sklearn.model_selection import train_test_split\nprint\\(f'sklearn: {time.time\\(\\) - start:.2f}s'\\)\n\nstart = time.time\\(\\)\nfrom PIL import Image\nprint\\(f'PIL: {time.time\\(\\) - start:.2f}s'\\)\n\")",
+      "Bash(/c/Users/pc/miniconda3/python.exe -c \"\nimport time, sys\nsys.path.insert\\(0, 'C:/Users/pc/Documents/GitHub/BrainTumorMRIClassification/src'\\)\n\nstart = time.time\\(\\)\nfrom src.Dataset.cache import load_cache\nprint\\(f'Dataset.cache import: {time.time\\(\\) - start:.2f}s'\\)\n\")",
+      "Bash(/c/Users/pc/miniconda3/python.exe -c \"\nimport time, sys\nsys.path.insert\\(0, 'C:/Users/pc/Documents/GitHub/BrainTumorMRIClassification/src'\\)\n\nstart = time.time\\(\\)\n\nfrom PIL import Image\nimport torch\nimport torch.optim as optim\nimport torch.nn as nn\nimport matplotlib.pyplot as plt\n\nfrom src.Dataset.mri_split import split_patients\nfrom src.Dataset.data_loaders import get_dataloaders\nfrom src.Dataset.cache import load_cache\nfrom src.Model.mri_resnet import build_resnet\nfrom src.Model.persistance import load_weights\nfrom src.Model.predict import predict\n\nprint\\(f'Total import time: {time.time\\(\\) - start:.2f}s'\\)\n\")",
+      "Bash(find C:/Users/pc/Documents/GitHub/BrainTumorMRIClassification/src -name \"__pycache__\" -type d -exec rm -rf {} +)"
+    ]
+  }
+}
