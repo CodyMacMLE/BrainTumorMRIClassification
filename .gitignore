@@ -29,3 +29,4 @@ Thumbs.db
 
 # Outputs (optional — you may want to commit some plots)
 outputs/
+!outputs/images/

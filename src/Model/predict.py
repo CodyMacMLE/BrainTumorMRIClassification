@@ -28,4 +28,7 @@ def predict(model: nn.Module, image: os.PathLike, device: str):
     # Generate output
     cam, prediction = grad_cam_hooks.generate(image_transformed)
 
-    return prediction, cam
+    pred_class = prediction.argmax(dim=1).item()
+    confidence = prediction.max(dim=1).values.item() * 100
+
+    return pred_class, confidence, cam
