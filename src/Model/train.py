@@ -16,7 +16,8 @@ def fit(
         optimizer: torch.optim.Optimizer,
         device: str,
         epochs: int = 1000,
-        patience: int = 5
+        patience: int = 5,
+        segmentation: bool = False
 ):
     """
     Fit the model with given data.
@@ -48,12 +49,17 @@ def fit(
             optimizer.zero_grad() # Set gradients to zero before backpropagation
             output = model(images) # Forward pass
 
+            if segmentation:
+                output = torch.sigmoid(output)
+
             loss = loss_fn(output, labels) # Calculate the loss
             loss.backward() # Backward pass (Back Propagation)
             optimizer.step() # Optimize
 
-            train_correct += output.argmax(dim=1).eq(labels).sum().item()
-            train_total += labels.size(0)
+            if not segmentation:
+                train_correct += output.argmax(dim=1).eq(labels).sum().item()
+                train_total += labels.size(0)
+
             total_train_loss += loss.item() # Accumulate loss for the epoch
 
         # Model evaluation on validation data
@@ -67,16 +73,23 @@ def fit(
                 images, labels = images.to(device), labels.to(device) # Move data to devic
 
                 output = model(images)
+
+                if segmentation:
+                    output = torch.sigmoid(output)
+
                 loss = loss_fn(output, labels)
 
-                valid_correct += output.argmax(dim=1).eq(labels).sum().item()
-                valid_total += labels.size(0)
+                if not segmentation:
+                    valid_correct += output.argmax(dim=1).eq(labels).sum().item()
+                    valid_total += labels.size(0)
+
                 total_val_loss += loss.item()
 
         avg_train_loss = total_train_loss / len(train_data) # Average loss for the epoch
-        avg_train_acc = train_correct / train_total # Average accuracy for the epoch
         avg_val_loss = total_val_loss / len(valid_data)  # Average loss for the epoch
-        avg_val_acc = valid_correct / valid_total  # Average accuracy for the epoch
+
+        avg_train_acc = train_correct / train_total if not segmentation else 0.0
+        avg_val_acc = valid_correct / valid_total if not segmentation else 0.0
 
         # Add epoch metrics
         epoch_data[epoch + 1] = (avg_train_loss, avg_val_loss, avg_train_acc, avg_val_acc)
