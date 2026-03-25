@@ -14,8 +14,8 @@ def get_dataloaders(
         segmentation = False
   ) -> tuple[DataLoader, DataLoader, DataLoader]:
 
-    train_dataloader = DataLoader(MriDataset(train_data, set_type = "train", segmentation=segmentation), batch_size=batch_size, shuffle=True, num_workers=4)
-    val_dataloader = DataLoader(MriDataset(val_data, set_type = "validation", segmentation=segmentation), batch_size=batch_size, shuffle=False, num_workers=4)
-    test_dataloader = DataLoader(MriDataset(test_data, set_type = "test", segmentation=segmentation), batch_size=batch_size, shuffle=False, num_workers=4)
+    train_dataloader = DataLoader(MriDataset(train_data, set_type = "train", segmentation=segmentation), batch_size=batch_size, shuffle=True, num_workers=0)
+    val_dataloader = DataLoader(MriDataset(val_data, set_type = "validation", segmentation=segmentation), batch_size=batch_size, shuffle=False, num_workers=0)
+    test_dataloader = DataLoader(MriDataset(test_data, set_type = "test", segmentation=segmentation), batch_size=batch_size, shuffle=False, num_workers=0)
 
     return train_dataloader, val_dataloader, test_dataloader
