@@ -1,5 +1,10 @@
+import os
 import torch
 import torch.nn as nn
+from PIL import Image
+
+from src.Dataset.transforms import transforms
+
 
 class DoubleConv(nn.Module):
     def __init__(self, in_channels: int, out_channels: int, dropout: float = 0.0):
@@ -30,6 +35,7 @@ class Encoder(nn.Module):
     def forward(self, x):
         x = self.conv(x)
         return self.max_pool(x), x
+
 
 class Decoder(nn.Module):
     def __init__(self, in_channels: int, out_channels: int, dropout: float = 0.0):
@@ -90,6 +96,7 @@ class DiceScore(nn.Module):
         sum_target = torch.sum(target)
         return (2 * intersection) / ( sum_pred + sum_target + 1e-6)
 
+
 class DiceLoss(nn.Module):
     def __init__(self):
         super().__init__()
@@ -106,6 +113,30 @@ class DiceLoss(nn.Module):
         sum_target = torch.sum(target)
         return 1 - (2 * intersection) / ( sum_pred + sum_target + 1e-6)
 
+
+def predict(model: UNetModel, image_path: os.PathLike, device: str):
+    """
+    Generates a prediction mask for the given image path using the provided model and device
+    :param model: UNetModel to use for prediction
+    :param image_path: path to the image to predict on
+    :param device: device to run the model on (e.g. "cuda" or "cpu")
+    :return: predicted mask as a numpy array
+    """
+    model.eval()
+    with torch.no_grad():
+        # Load and preprocess the image
+        img = Image.open(image_path)
+        img = img.convert("RGB")
+        img = img.resize((224, 224))
+        img = transforms.ToTensor()(img)
+        img = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])(img)
+        img = img.unsqueeze(0)
+        img = img.to(device)
+        prediction = model(img)
+        prediction = torch.sigmoid(prediction)
+        prediction = (prediction > 0.5).float()
+
+        return prediction.squeeze().cpu().numpy()
 
 
 # SANITY CHECK
