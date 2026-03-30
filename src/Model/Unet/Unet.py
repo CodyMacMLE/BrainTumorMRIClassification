@@ -114,6 +114,42 @@ class DiceLoss(nn.Module):
         return 1 - (2 * intersection) / ( sum_pred + sum_target + 1e-6)
 
 
+class IoUScore(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+
+    def forward(self, prediction, target):
+        """
+        Generates the Intersect of Union score between tumor pixels in the mask
+        :param prediction: prediction mask
+        :param target: target mask
+        :return:
+        """
+        intersection = torch.sum(prediction * target)
+        sum_pred = torch.sum(prediction)
+        sum_target = torch.sum(target)
+        return intersection / ( sum_pred + sum_target - intersection + 1e-6)
+
+
+class IoULoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+
+    def forward(self, prediction, target):
+        """
+        Generates the Intersect of Union loss between tumor pixels in the mask
+        :param prediction: prediction mask
+        :param target: target mask
+        :return:
+        """
+        intersection = torch.sum(prediction * target)
+        sum_pred = torch.sum(prediction)
+        sum_target = torch.sum(target)
+        return 1 - (intersection / ( sum_pred + sum_target - intersection + 1e-6))
+
+
 def predict(model: UNetModel, image_path: os.PathLike, device: str):
     """
     Generates a prediction mask for the given image path using the provided model and device
