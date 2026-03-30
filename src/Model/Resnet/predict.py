@@ -1,11 +1,14 @@
 from pathlib import Path
+import numpy as np
+import PIL
 import matplotlib.pyplot as plt
 import PIL.Image as Image
 import torch
 import torch.nn as nn
 import os
+from numpy.typing import NDArray
 
-def predict(model: nn.Module, image: os.PathLike, device: str):
+def predict(model: nn.Module, image: os.PathLike | NDArray, device: str):
     from .GradCAM import GradCAM
     from src.Dataset.transforms import get_val_transforms
 
@@ -20,7 +23,13 @@ def predict(model: nn.Module, image: os.PathLike, device: str):
     grad_cam_hooks = GradCAM(model, target_layer="layer4.1.conv2")
 
     # Prepare the Image
-    image_transformed = Image.open(image)
+    if isinstance(image, np.ndarray):
+        image_transformed = Image.fromarray(image)
+    elif isinstance(image, os.PathLike):
+        image_transformed = Image.open(image)
+    else:
+        raise TypeError(f"Unsupported image type: {type(image)}")
+
     transformers = get_val_transforms()
     image_transformed = transformers(image_transformed)
     image_transformed = image_transformed.unsqueeze(0).to(device)
