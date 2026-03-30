@@ -2,6 +2,8 @@ import os
 import torch
 import torch.nn as nn
 from PIL import Image
+from numpy.typing import NDArray
+import numpy as np
 
 from src.Dataset.transforms import transforms
 
@@ -150,18 +152,22 @@ class IoULoss(nn.Module):
         return 1 - (intersection / ( sum_pred + sum_target - intersection + 1e-6))
 
 
-def predict(model: UNetModel, image_path: os.PathLike, device: str):
+def predict(model: UNetModel, image: os.PathLike | NDArray, device: str):
     """
     Generates a prediction mask for the given image path using the provided model and device
     :param model: UNetModel to use for prediction
-    :param image_path: path to the image to predict on
+    :param image: The image to predict on
     :param device: device to run the model on (e.g. "cuda" or "cpu")
     :return: predicted mask as a numpy array
     """
     model.eval()
     with torch.no_grad():
         # Load and preprocess the image
-        img = Image.open(image_path)
+        if isinstance(image, np.ndarray):
+            img = Image.fromarray(image)
+        elif isinstance(image, os.PathLike):
+            img = Image.open(image)
+
         img = img.convert("RGB")
         img = img.resize((224, 224))
         img = transforms.ToTensor()(img)
