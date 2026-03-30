@@ -20,8 +20,10 @@ class MriDataset(torch.utils.data.Dataset):
         self.mri_dataset = []
         self.segmentation = segmentation
         if set_type == "train":
-            self.transforms = Transforms(pixel_transforms=True)
-        if set_type == "test" or set_type == "validation":
+            self.transforms = Transforms(augment = True, pixel_transforms = True)
+        if set_type == "validation":
+            self.transforms = Transforms(pixel_transforms=False)
+        if set_type == "test":
             self.transforms = Transforms()
 
         for patient, segments in data.items():

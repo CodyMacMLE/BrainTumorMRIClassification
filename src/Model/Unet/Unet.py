@@ -2,16 +2,18 @@ import torch
 import torch.nn as nn
 
 class DoubleConv(nn.Module):
-    def __init__(self, in_channels: int, out_channels: int):
+    def __init__(self, in_channels: int, out_channels: int, dropout: float = 0.0):
         super().__init__()
 
         self.conv = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, (3, 3), padding=1),
             nn.BatchNorm2d(out_channels),
             nn.ReLU(),
+            nn.Dropout2d(dropout),
             nn.Conv2d(out_channels, out_channels, (3, 3), padding=1),
             nn.BatchNorm2d(out_channels),
-            nn.ReLU()
+            nn.ReLU(),
+            nn.Dropout2d(dropout),
         )
 
     def forward(self, x):
@@ -19,10 +21,10 @@ class DoubleConv(nn.Module):
 
 
 class Encoder(nn.Module):
-    def __init__(self, in_channels: int, out_channels: int):
+    def __init__(self, in_channels: int, out_channels: int, dropout: float = 0.0):
         super().__init__()
 
-        self.conv = DoubleConv(in_channels, out_channels)
+        self.conv = DoubleConv(in_channels, out_channels, dropout)
         self.max_pool = nn.MaxPool2d((2,2))
 
     def forward(self, x):
@@ -30,12 +32,12 @@ class Encoder(nn.Module):
         return self.max_pool(x), x
 
 class Decoder(nn.Module):
-    def __init__(self, in_channels: int, out_channels: int):
+    def __init__(self, in_channels: int, out_channels: int, dropout: float = 0.0):
         super().__init__()
 
         self.upsample = nn.ConvTranspose2d(in_channels, out_channels, (2,2), stride=2)
         # concat skip here
-        self.conv = DoubleConv(out_channels * 2, out_channels)
+        self.conv = DoubleConv(out_channels * 2, out_channels, dropout)
 
     def forward(self, x, skip_connection):
         x = self.upsample(x)
@@ -51,11 +53,11 @@ class UNetModel(nn.Module):
         self.encoder2 = Encoder(64, 128)
         self.encoder3 = Encoder(128, 256)
         self.encoder4 = Encoder(256, 512)
-        self.bottleneck = DoubleConv(512, 1024)
-        self.decoder1 = Decoder(1024, 512)
-        self.decoder2 = Decoder(512, 256)
-        self.decoder3 = Decoder(256, 128)
-        self.decoder4 = Decoder(128, 64)
+        self.bottleneck = DoubleConv(512, 1024, dropout=0.5)
+        self.decoder1 = Decoder(1024, 512, dropout=0.5)
+        self.decoder2 = Decoder(512, 256, dropout=0.3)
+        self.decoder3 = Decoder(256, 128, dropout=0.3)
+        self.decoder4 = Decoder(128, 64, dropout=0.0)
         self.output = nn.Conv2d(64, out_channels, 1)
 
 
@@ -72,6 +74,22 @@ class UNetModel(nn.Module):
         return self.output(x)
 
 
+class DiceScore(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, prediction, target):
+        """
+        Generates the dice score between tumor pixels in the mask
+        :param prediction: prediction mask
+        :param target: target mask
+        :return:
+        """
+        intersection = torch.sum(prediction * target)
+        sum_pred = torch.sum(prediction)
+        sum_target = torch.sum(target)
+        return (2 * intersection) / ( sum_pred + sum_target + 1e-6)
+
 class DiceLoss(nn.Module):
     def __init__(self):
         super().__init__()
@@ -79,15 +97,14 @@ class DiceLoss(nn.Module):
     def forward(self, prediction, target):
         """
         Generates the dice loss between tumor pixels in the mask
-        :param prediction:
-        :param target:
+        :param prediction: prediction mask
+        :param target: target mask
         :return:
         """
         intersection = torch.sum(prediction * target)
         sum_pred = torch.sum(prediction)
         sum_target = torch.sum(target)
-        dice_score = (2 * intersection) / ( sum_pred + sum_target + 1e-6)
-        return 1 - dice_score
+        return 1 - (2 * intersection) / ( sum_pred + sum_target + 1e-6)
 
 
 
