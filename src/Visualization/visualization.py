@@ -29,3 +29,31 @@ def plot_loss_acc(epoch_data, title="Loss and Accuracy Curves", path: os.PathLik
         fig.savefig(path)
     else:
         plt.show()
+
+def visualize_segment_mask(original, predicted, ground_truth, overlaid = False, alpha = 0.5):
+    original = original.resize((224, 224))
+    ground_truth = ground_truth.resize((224, 224))
+
+    fig, axs = plt.subplots(1, 3)
+    fig.set_size_inches(15, 5)
+
+    fig.suptitle("MRI Segment Visualization")
+    axs[0].xaxis.set_visible(False)
+    axs[0].yaxis.set_visible(False)
+    axs[1].xaxis.set_visible(False)
+    axs[1].yaxis.set_visible(False)
+    axs[2].xaxis.set_visible(False)
+    axs[2].yaxis.set_visible(False)
+
+    axs[0].set_title("Original")
+    axs[0].imshow(original)
+
+    axs[1].set_title("Predicted Mask")
+    if overlaid:
+        axs[1].imshow(original)
+        axs[1].imshow(predicted, alpha=alpha, cmap='jet')
+    else:
+        axs[1].imshow(predicted, cmap='gray')
+
+    axs[2].set_title("Ground Truth Mask")
+    axs[2].imshow(ground_truth, cmap='gray')
