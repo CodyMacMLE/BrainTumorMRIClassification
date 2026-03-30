@@ -28,8 +28,4 @@ def plot_loss_acc(epoch_data, title="Loss and Accuracy Curves", path: os.PathLik
     if path:
         fig.savefig(path)
     else:
-        path = Path(__file__).resolve().parent.parent.parent / "outputs"
-        path.mkdir(parents=True, exist_ok=True)
-        fig.savefig(f"{path}/loss-curves_{datetime.now().strftime('%Y-%m-%d_%Hh%m-%Ss')}.png")
-
-    plt.show()
+        plt.show()

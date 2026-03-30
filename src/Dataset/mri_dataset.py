@@ -5,35 +5,44 @@ import numpy as np
 
 # Internal Imports
 from Typedef.Patients import Patients
+from .transforms import Transforms
 
 class MriDataset(torch.utils.data.Dataset):
-    def __init__(self, data: Patients, transform=None):
+    def __init__(self, data: Patients, set_type=None, segmentation=False):
         """
         Initializes the MRI Dataset to use in training, testing, and validation
         :param data: The data of patients that have passed data integrity. The data needs to have been split
         prior to this step and given as the Patients datatype.
-        :param transform:
+        :param set_type:
+        :param segmentation:
         """
 
         self.mri_dataset = []
-        self.transform = transform
+        self.segmentation = segmentation
+        if set_type == "train":
+            self.transforms = Transforms(augment = True, pixel_transforms = True)
+        if set_type == "validation":
+            self.transforms = Transforms(pixel_transforms=False)
+        if set_type == "test":
+            self.transforms = Transforms()
 
-        # Iterate through patients dict
-        for _ , mri_segments in data.items():
-            # Iterate through the segments list
-            for mri_segment in mri_segments:
-                mri_image_path, mri_mask_path = mri_segment
-                # create label
-                mri_mask_img = Image.open(mri_mask_path).convert('L')
-                if np.array(mri_mask_img).max() > 0:
-                    label = 1
-                else:
-                    label = 0
+        for patient, segments in data.items():
+            for segment in segments:
+                if not segmentation:
+                    mri, mask = segment
+                    mask = Image.open(mask).convert('L')
+                    if np.array(mask).max() > 0:
+                        label = 1
+                    else:
+                        label = 0
+                    segment = (mri, label)
 
-                self.mri_dataset.append((mri_image_path, label))
+                self.mri_dataset.append(segment)
+
 
     def __len__(self):
         return len(self.mri_dataset)
+
 
     def __getitem__(self, index):
         img_path, label = self.mri_dataset[index]
@@ -41,7 +50,16 @@ class MriDataset(torch.utils.data.Dataset):
         # read image
         image = Image.open(img_path)
 
-        if self.transform:
-            image = self.transform(image)
+        if self.segmentation:
+            label = Image.open(label).convert('L')
+            label = np.array(label)
+
+            label = (label > 0).astype(np.float32)
+
+            image, label = self.transforms(image, label)
+
+            label = torch.unsqueeze(label, 0)
+        else:
+            image = self.transforms(image)
 
         return image, label
