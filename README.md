@@ -66,7 +66,7 @@ loss of 0.3127 (compared to 0.1415 on training), revealing a generalization gap 
 medical imaging data. Potential next steps to close this gap include adding stronger data augmentation, experimenting with 
 deeper architectures or attention mechanisms, and training on a larger dataset.
 
-![Unet Model Metrics](outputs/unet-dice-loss.png "Dice/Loss Chart") <br>
+![Unet Model Metrics](outputs/images/unet-dice-loss.png "Dice/Loss Chart") <br>
 
 ### How to Use the Model
 1. Download the dataset from [Kaggle](https://www.kaggle.com/datasets/mateuszbuda/lgg-mri-segmentation) and extract it 
