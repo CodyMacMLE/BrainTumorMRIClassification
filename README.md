@@ -1,5 +1,7 @@
 # Brain Tumor Segmentation using UNET and Resnet-18 Architectures
 
+🔴 **[Live Demo →](https://www.codymacdonald.dev/gradio-brain-tumor)**
+
 ### Problem Statement
 The goal of this project is to develop deep learning models for brain tumor classification and segmentation using 
 ResNet-18 and U-Net architectures. Brain tumor detection is a critical task in medical imaging, as it helps in the 
