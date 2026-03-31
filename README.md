@@ -180,7 +180,7 @@ model.to(device)
 ```
 
 ### Limitations
-**NOT A PRODUCTION-LEVEL MODEL**<br>
+**Clinical Disclaimer:** This model is intended for research and educational purposes only and has not been validated for clinical use.<br><br>
 This is a model built as a student project. Currently, the model is overfitting, and the heatmap is generalized over the 
 whole brain segment. Neither is giving an accurate display of a tumor being present. This model version is prone to false
 negatives that are harmful to misdiagnose a patient who in fact has a tumor. The goal would be to train this model to a 99.999% recall score as
